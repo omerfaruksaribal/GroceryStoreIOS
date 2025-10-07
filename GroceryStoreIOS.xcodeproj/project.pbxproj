@@ -11,7 +11,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		464B02822E94090A00550680 /* Exceptions for "GroceryStoreIOS" folder in "GroceryStoreIOS" target */ = {
+		464B02AF2E940E4B00550680 /* Exceptions for "GroceryStoreIOS" folder in "GroceryStoreIOS" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -21,10 +21,10 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		464B02722E94090900550680 /* GroceryStoreIOS */ = {
+		464B02A82E940E4B00550680 /* GroceryStoreIOS */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				464B02822E94090A00550680 /* Exceptions for "GroceryStoreIOS" folder in "GroceryStoreIOS" target */,
+				464B02AF2E940E4B00550680 /* Exceptions for "GroceryStoreIOS" folder in "GroceryStoreIOS" target */,
 			);
 			path = GroceryStoreIOS;
 			sourceTree = "<group>";
@@ -45,8 +45,8 @@
 		464B02672E94090900550680 = {
 			isa = PBXGroup;
 			children = (
-				464B02722E94090900550680 /* GroceryStoreIOS */,
 				464B02712E94090900550680 /* Products */,
+				464B02A82E940E4B00550680 /* GroceryStoreIOS */,
 			);
 			sourceTree = "<group>";
 		};
@@ -74,7 +74,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				464B02722E94090900550680 /* GroceryStoreIOS */,
+				464B02A82E940E4B00550680 /* GroceryStoreIOS */,
 			);
 			name = GroceryStoreIOS;
 			packageProductDependencies = (
