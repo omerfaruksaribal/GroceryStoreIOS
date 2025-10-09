@@ -1,57 +1,65 @@
 import UIKit
 
-final class LoginVC: UIViewController {
+final class ActivateAccountVC: UIViewController {
+
+    //  MARK: - dependicies
+    private let prefilledEmail: String?
+
+    init(prefilledEmail: String? = nil) {
+        self.prefilledEmail = prefilledEmail
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 
     //  MARK: - UI
-
     private let titleLabel: DSLabel = {
         let lbl = DSLabel(style: .title1, weight: .bold, textColor: DSColor.primary)
-        lbl.text = "Login to Your Account"
+        lbl.text = "Activate Your Account"
         return lbl
     }()
 
-    private let usernameField: DSTextField = {
+    private let emailField: DSTextField = {
         let tf = DSTextField()
-        tf.textField.placeholder = "Username"
+        tf.textField.placeholder = "youremail@sample.com"
         tf.dsState = .normal
         return tf
     }()
 
-    private let passwordField: DSTextField = {
+    private let codeField: DSTextField = {
         let tf = DSTextField()
-        tf.textField.placeholder = "Password"
+        tf.textField.placeholder = "Enter your activation code"
         tf.dsState = .normal
-        tf.textField.isSecureTextEntry = true
-        tf.textField.textContentType = .oneTimeCode
+        tf.textField.keyboardType = .numberPad
         return tf
     }()
 
     private let submitButton: DSButton = {
-        let button = DSButton(variant: .primary, size: .large)
-        button.setTitle("Login", for: .normal)
-        return button
-    }()
-
-    private let navigateToRegisterButton: DSButton = {
-        let button = DSButton(variant: .secondary, size: .medium)
-        button.setTitle("Don't you have an account? Register", for: .normal)
-        return button
+        let btn = DSButton(variant: .primary, size: .large)
+        btn.setTitle("Activate Account", for: .normal)
+        return btn
     }()
 
     private var loader: DSLoader?
 
-    //  MARK: - MVVM
-    private let viewModel = LoginVM()
+    //  MARK: - VM
+    private let viewModel = ActivateAccountVM()
 
-    //  MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-
         view.backgroundColor = DSColor.background
 
         layout()
         bindInputs()
         bindOutputs()
+
+        if let email = prefilledEmail {
+            emailField.text = email
+            emailField.textField.isUserInteractionEnabled = false // Make read-only
+            viewModel.email = email
+        }
     }
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -59,15 +67,13 @@ final class LoginVC: UIViewController {
         view.endEditing(true)
     }
 
-    //  MARK: - Layout
-
+    //  MARK: - layout
     private func layout() {
         let stack = UIStackView(arrangedSubviews: [
             titleLabel,
-            usernameField,
-            passwordField,
-            submitButton,
-            navigateToRegisterButton
+            emailField,
+            codeField,
+            submitButton
         ])
         stack.axis = .vertical
         stack.spacing = DSSpacing.lg
@@ -83,90 +89,74 @@ final class LoginVC: UIViewController {
     }
 
     //  MARK: - Bindings
-
     private func bindInputs() {
-        usernameField.onEditingChanged = { [weak self] text in
+        emailField.onEditingChanged = { [weak self] text in
             guard let self else { return }
-            self.viewModel.username = text
-
-            if case .error = self.usernameField.dsState {
-                self.usernameField.dsState = .normal
+            self.viewModel.email = text
+            if case .error = self.emailField.dsState {
+                self.emailField.dsState = .normal
             }
         }
 
-        passwordField.onEditingChanged = { [weak self] text in
+        codeField.onEditingChanged = { [weak self] code in
             guard let self else { return }
-            self.viewModel.password = text
-            
-            if case .error = self.passwordField.dsState {
-                self.passwordField.dsState = .normal
+            self.viewModel.activationCode = code
+            if case .error = self.codeField.dsState {
+                self.codeField.dsState = .normal
             }
-        }
-
-        passwordField.onReturnTapped = { [weak self] in
-            self?.submitTapped()
         }
 
         submitButton.addTarget(self, action: #selector(submitTapped), for: .touchUpInside)
-        navigateToRegisterButton.addTarget(self, action: #selector(navigateToRegister), for: .touchUpInside)
     }
 
     private func bindOutputs() {
-        // State Changes (loading / success / error)
         viewModel.onStateChange = { [weak self] state in
             guard let self else { return }
             switch state {
             case .idle:
-                self.setLoading(false)
+                setLoading(false)
             case .submitting:
-                self.setLoading(true)
-            case .success(let username):
+                setLoading(true)
+            case .success:
                 self.setLoading(false)
                 var cfg = DSToast.Config()
                 cfg.style = .success
                 cfg.position = .bottom
-                DSToastCenter.shared.show(text: "Welcome, \(username)!", in: self.view, config: cfg)
+                DSToastCenter.shared.show(text: "Account activated successfully!", in: self.view, config: cfg)
+
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    self.navigationController?.popToRootViewController(animated: true)
+                }
             case .error(let message):
                 self.setLoading(false)
-                var config = DSToast.Config()
-                config.style = .error
-                config.position = .top
-                DSToastCenter.shared.show(text: message, in: self.view, config: config)
+                var cfg = DSToast.Config()
+                cfg.style = .error
+                cfg.position = .top
+                DSToastCenter.shared.show(text: message, in: self.view, config: cfg)
             }
         }
 
         viewModel.onFieldErrors = { [weak self] map in
             guard let self else { return }
-            if let m = map["username"] {
-                self.usernameField.dsState = .error(message: m)
-            }
-            if let m = map["password"] {
-                self.passwordField.dsState = .error(message: m)
-            }
+            if let msg = map["email"] { self.emailField.dsState = .error(message: msg) }
+            if let msg = map["activationCode"] { self.codeField.dsState = .error(message: msg) }
         }
     }
 
     //  MARK: - Actions
-
     @objc private func submitTapped() {
         view.endEditing(true)
         viewModel.submit()
     }
 
-    @objc private func navigateToRegister() {
-        let vc = RegisterVC()
-        navigationController?.pushViewController(vc, animated: true)
-    }
-
     //  MARK: - Helpers
-
     private func setLoading(_ loading: Bool) {
         submitButton.isEnabled = !loading
         submitButton.isLoading = loading
 
         if loading {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                let loader = DSLoader(message: "Logging in...")
+                let loader = DSLoader(message: "Activating...")
                 loader.show(in: self.view)
                 self.loader = loader
             }
@@ -175,5 +165,5 @@ final class LoginVC: UIViewController {
             self.loader = nil
         }
     }
-
 }
+

@@ -1,9 +1,12 @@
 import Foundation
 
+
 protocol AuthServiceProtocol {
     func register(_ request: RegisterRequest) async throws -> RegisterResponse
 
     func login(_ request: LoginRequest) async throws -> LoginResponse
+
+    func activateAccount(_ request: ActivateAccountRequest) async throws -> ApiResponse<EmptyResponse>
 }
 
 final class AuthService: AuthServiceProtocol {
@@ -26,6 +29,7 @@ final class AuthService: AuthServiceProtocol {
         return response
     }
 
+    /// POST /auth/login
     func login(_ request: LoginRequest) async throws -> LoginResponse {
         let response: LoginResponse = try await client.send(
             path: "/auth/login",
@@ -33,6 +37,18 @@ final class AuthService: AuthServiceProtocol {
             body: request,
             headers: [:],
             response: LoginResponse.self
+        )
+        return response
+    }
+
+    /// PATCH /auth/activate
+    func activateAccount(_ request: ActivateAccountRequest) async throws -> ApiResponse<EmptyResponse> {
+        let response: ApiResponse<EmptyResponse> = try await client.send(
+            path: "/auth/activate",
+            method: "PATCH",
+            body: request,
+            headers: [:],
+            response: ApiResponse<EmptyResponse>.self
         )
         return response
     }

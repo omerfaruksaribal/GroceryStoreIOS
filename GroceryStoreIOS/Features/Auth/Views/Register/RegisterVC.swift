@@ -29,6 +29,7 @@ final class RegisterVC: UIViewController {
         tf.textField.placeholder = "Password"
         tf.dsState = .normal
         tf.textField.isSecureTextEntry = true
+        tf.textField.textContentType = .oneTimeCode
         return tf
     }()
 
@@ -196,15 +197,7 @@ final class RegisterVC: UIViewController {
     }
 
     private func showActivation(for email: String) {
-        // Replace with your real Activate screen push.
-        // For now, show a success toast and simulate navigation.
-        var cfg = DSToast.Config()
-        cfg.style = .success
-        cfg.position = .bottom
-        DSToastCenter.shared.show(text: "Check your email: \(email)", in: view, config: cfg)
-
-        // Example navigation stub:
-        // let vc = ActivateViewController(email: email)
-        // navigationController?.pushViewController(vc, animated: true)
+        let vc = ActivateAccountVC(prefilledEmail: email)
+        navigationController?.pushViewController(vc, animated: true)
     }
 }

@@ -14,7 +14,6 @@ struct ErrorDetails: Codable {
     let rejectedValue: String
 }
 
-
 /*
 Successfull ApiResponse response
  {

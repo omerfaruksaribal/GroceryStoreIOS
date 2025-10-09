@@ -5,8 +5,6 @@ final class APIClient {
 
     private var session: URLSession = {
         let config = URLSessionConfiguration.default
-        config.timeoutIntervalForRequest = NetworkConfig.timeout
-        config.timeoutIntervalForResource = NetworkConfig.timeout
         return URLSession(configuration: config)
     }()
 

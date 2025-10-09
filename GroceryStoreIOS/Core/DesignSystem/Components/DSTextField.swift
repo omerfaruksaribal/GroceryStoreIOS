@@ -46,6 +46,9 @@ public final class DSTextField: UIControl, UITextFieldDelegate {
         textField.tintColor = DSColor.primary
         textField.clearButtonMode = .whileEditing
         textField.adjustsFontForContentSizeCategory = true
+        textField.textContentType = .oneTimeCode
+        textField.autocorrectionType = .no
+        textField.autocapitalizationType = .none
 
         captionLabel.font = DSFont.font(.caption)
         captionLabel.textColor = DSColor.textSecondary
