@@ -36,16 +36,18 @@ final class LoginVM {
             guard let self else { return }
             do {
                 let response = try await self.authService.login(req)
-                if response.status == 200, let data = response.data {
-                    self.onStateChange?(.success(username: data.username))
-                } else {
-                    var fieldMap: [String: String] = [:]
-                    response.errors?.forEach { error in
-                        fieldMap[error.field] = error.errorMessage
-                    }
-                    if !fieldMap.isEmpty { self.onFieldErrors?(fieldMap) }
+                await MainActor.run {
+                    if response.status == 200, let data = response.data {
+                        self.onStateChange?(.success(username: data.username))
+                    } else {
+                        var fieldMap: [String: String] = [:]
+                        response.errors?.forEach { error in
+                            fieldMap[error.field] = error.errorMessage
+                        }
+                        if !fieldMap.isEmpty { self.onFieldErrors?(fieldMap) }
 
-                    self.onStateChange?(.error(message: response.message))
+                        self.onStateChange?(.error(message: response.message))
+                    }
                 }
             } catch {
                 self.onStateChange?(.error(message: "An unexpected error occurred."))
@@ -57,7 +59,19 @@ final class LoginVM {
     //  MARK: - Validator
 
     private func validate() -> [String: String]? {
-        return [:]
+        var errors: [String: String] = [:]
+
+        // Username required
+        if username.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            errors["username"] = "Username is required."
+        }
+
+        // Password minimum length
+        if password.count < 8 {
+            errors["password"] = "Password must be at least 8 characters."
+        }
+
+        return errors
     }
 
     

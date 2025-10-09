@@ -264,7 +264,7 @@ public final class DSToastCenter {
         let item = queue.removeFirst()
 
         // Hook dismissal to release the presenting lock
-        let originalDismiss = item.toast.dismiss(animated:)
+        _ = item.toast.dismiss(animated:)
         // (No direct way to swizzle here; rely on completion in dismiss -> it calls dequeueAndShowNext)
 
         item.toast.present(in: item.host, config: item.config)

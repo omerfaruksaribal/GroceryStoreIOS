@@ -136,7 +136,6 @@ public final class DSTextField: UIControl, UITextFieldDelegate {
 
     @objc private func textChanged() {
         onEditingChanged?(textField.text ?? "")
-        sendActions(for: .editingChanged)
     }
 
 

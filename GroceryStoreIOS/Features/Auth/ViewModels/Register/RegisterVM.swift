@@ -37,20 +37,25 @@ final class RegisterVM {
             guard let self else { return }
             do {
                 let response = try await self.authService.register(req)
-                if response.status == 200, let data = response.data {
-                    self.onStateChange?(.success(email: data.email))
-                } else {
-                    var fieldMap: [String: String] = [:]
-                    response.errors?.forEach { error in
-                        fieldMap[error.field] = error.errorMessage
-                    }
-                    if !fieldMap.isEmpty { self.onFieldErrors?(fieldMap) }
 
-                    self.onStateChange?(.error(message: response.message))
+                await MainActor.run {
+                    if response.status == 200, let data = response.data {
+                        self.onStateChange?(.success(email: data.email))
+                    } else {
+                        var fieldMap: [String: String] = [:]
+                        response.errors?.forEach { error in
+                            fieldMap[error.field] = error.errorMessage
+                        }
+                        if !fieldMap.isEmpty { self.onFieldErrors?(fieldMap) }
+
+                        self.onStateChange?(.error(message: response.message))
+                    }
                 }
             } catch {
-                self.onStateChange?(.error(message: "Something went wrong. Please try again later"))
-                print("LoginVM \(#line). Line Error: \(error.localizedDescription)")
+                await MainActor.run {
+                    self.onStateChange?(.error(message: "Something went wrong. Please try again later"))
+                    print("LoginVM \(#line). Line Error: \(error.localizedDescription)")
+                }
             }
         }
     }
