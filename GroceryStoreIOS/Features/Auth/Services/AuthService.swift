@@ -7,6 +7,8 @@ protocol AuthServiceProtocol {
     func login(_ request: LoginRequest) async throws -> LoginResponse
 
     func activateAccount(_ request: ActivateAccountRequest) async throws -> ApiResponse<EmptyResponse>
+
+    func refreshToken(_ request: RefreshTokenRequest) async throws -> RefreshTokenResponse
 }
 
 final class AuthService: AuthServiceProtocol {
@@ -49,6 +51,18 @@ final class AuthService: AuthServiceProtocol {
             body: request,
             headers: [:],
             response: ApiResponse<EmptyResponse>.self
+        )
+        return response
+    }
+
+    /// POST /auth/refresh-token
+    func refreshToken(_ request: RefreshTokenRequest) async throws -> RefreshTokenResponse {
+        let response: RefreshTokenResponse = try await client.send(
+            path: "/auth/refresh-token",
+            method: "POST",
+            body: request,
+            headers: [:],
+            response: RefreshTokenResponse.self
         )
         return response
     }
