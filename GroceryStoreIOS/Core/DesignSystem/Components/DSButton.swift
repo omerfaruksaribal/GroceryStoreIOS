@@ -1,7 +1,7 @@
 import UIKit
 
 /// A reusable, theme-aware button with built-in states (loading/disabled)
-/// and variants (primary, secondary, destructive, ghost).
+/// and variants (primary, secondary, destructive, ghost, link).
 public final class DSButton: UIButton {
 
     public enum Variant {
@@ -9,6 +9,7 @@ public final class DSButton: UIButton {
         case secondary
         case destructive
         case ghost
+        case link
     }
 
     public enum Size {
@@ -33,6 +34,7 @@ public final class DSButton: UIButton {
     // Private UI
     private let activityIndicator = UIActivityIndicatorView(style: .medium)
     private var storedTitle: String?
+    private var underlineLayer: CALayer?
 
     // Init
     public init(variant: Variant = .primary, size: Size = .medium) {
@@ -48,7 +50,6 @@ public final class DSButton: UIButton {
     }
 
     // MARK: - Setup
-
     private func setup() {
         // Typography
         titleLabel?.font = DSFont.font(.headline, weight: .semibold)
@@ -73,10 +74,26 @@ public final class DSButton: UIButton {
         // Initial style
         applyStyle()
         updateLoadingState()
+
+        // Register for trait (light/dark) changes – iOS 17+
+        if #available(iOS 17.0, *) {
+            registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: DSButton, previousStyle) in
+                if self.variant == .link {
+                    let color: UIColor = {
+                        if self.traitCollection.userInterfaceStyle == .dark {
+                            return UIColor(hex: "#E6EDF3")!
+                        } else {
+                            return UIColor(hex: "#1A1D2D")!
+                        }
+                    }()
+                    self.underlineLayer?.backgroundColor = color.cgColor
+                    self.setTitleColor(color, for: .normal)
+                }
+            }
+        }
     }
 
     // MARK: - Layout presets
-
     private func applySize() {
         let insets: NSDirectionalEdgeInsets
         let font: UIFont
@@ -107,26 +124,6 @@ public final class DSButton: UIButton {
         }
         titleLabel?.font = font
     }
-
-    // MARK: - Visual style
-
-    public override var isHighlighted: Bool {
-        didSet {
-            guard !isLoading else { return }
-            if isHighlighted {
-                // Apply a subtle pressed overlay
-                let overlay = DSColor.pressedOverlay(on: backgroundColor ?? .clear, trait: traitCollection)
-                layer.backgroundColor = blend(base: effectiveBackgroundColor(), overlay: overlay).cgColor
-            } else {
-                layer.backgroundColor = effectiveBackgroundColor().cgColor
-            }
-        }
-    }
-
-    public override var isEnabled: Bool {
-        didSet { applyStyle() }
-    }
-
     private func applyStyle() {
         // Colors per variant
         let bg = effectiveBackgroundColor()
@@ -144,11 +141,112 @@ public final class DSButton: UIButton {
             layer.borderColor = UIColor.clear.cgColor
         }
 
+        // Remove previous underline if any
+        underlineLayer?.removeFromSuperlayer()
+        underlineLayer = nil
+
+        // Special case: link variant
+        if variant == .link {
+            clipsToBounds = false
+            layer.masksToBounds = false
+            backgroundColor = .clear
+            layer.borderWidth = 0
+            layer.cornerRadius = 0
+
+            let titleText = title(for: .normal) ?? ""
+            // Use a dynamic, vivid accessible color for underline and text
+            let underlineColor: UIColor = {
+                if traitCollection.userInterfaceStyle == .dark {
+                    return UIColor(hex: "#E6EDF3")!
+                } else {
+                    return UIColor(hex: "#1A1D2D")!
+                }
+            }()
+
+            // Underlined text (for accessibility + fallback)
+            let attributes: [NSAttributedString.Key: Any] = [
+                .underlineStyle: NSUnderlineStyle.single.rawValue,
+                .underlineColor: underlineColor,
+                .foregroundColor: underlineColor,
+                .font: DSFont.font(.subheadline, weight: .semibold)
+            ]
+            let attrTitle = NSAttributedString(string: titleText, attributes: attributes)
+
+            if #available(iOS 15.0, *) {
+                var config = UIButton.Configuration.plain()
+                config.contentInsets = .zero
+                config.baseForegroundColor = underlineColor
+                config.attributedTitle = AttributedString(attrTitle)
+                self.configuration = config
+            } else {
+                contentEdgeInsets = .zero
+                setAttributedTitle(attrTitle, for: .normal)
+            }
+            setTitleColor(underlineColor, for: .normal)
+
+            // Add visual underline layer (real line under text)
+            let underline = CALayer()
+            underline.shadowColor = UIColor.black.withAlphaComponent(0.25).cgColor
+            underline.shadowOpacity = 0.3
+            underline.shadowOffset = .zero
+            underline.shadowRadius = 0.5
+            underline.backgroundColor = underlineColor.cgColor
+            layer.addSublayer(underline)
+            underlineLayer = underline
+
+            // Compact sizing
+            setContentHuggingPriority(.required, for: .horizontal)
+            setContentCompressionResistancePriority(.required, for: .horizontal)
+        }
+
         // Disabled visuals
         if !isEnabled {
             backgroundColor = DSColor.disabledBackground
             setTitleColor(DSColor.textDisabled, for: .disabled)
         }
+    }
+
+    // MARK: - Visual style
+    public override var isHighlighted: Bool {
+        didSet {
+            guard !isLoading else { return }
+            if variant == .link {
+                UIView.animate(withDuration: 0.15) {
+                    self.underlineLayer?.opacity = self.isHighlighted ? 0.5 : 1.0
+                }
+                return
+            }
+
+            if isHighlighted {
+                let overlay = DSColor.pressedOverlay(on: backgroundColor ?? .clear, trait: traitCollection)
+                layer.backgroundColor = blend(base: effectiveBackgroundColor(), overlay: overlay).cgColor
+            } else {
+                layer.backgroundColor = effectiveBackgroundColor().cgColor
+            }
+        }
+    }
+    public override var isEnabled: Bool {
+        didSet { applyStyle() }
+    }
+
+    public override func layoutSubviews() {
+        super.layoutSubviews()
+        guard variant == .link, let titleLabel, let underlineLayer else { return }
+
+        let underlineHeight: CGFloat = 2.0
+        let gap: CGFloat = 3.0
+
+        // Position underline relative to the title label’s frame
+        let underlineY = titleLabel.frame.maxY + gap
+        underlineLayer.frame = CGRect(
+            x: titleLabel.frame.minX,
+            y: min(underlineY, bounds.height - underlineHeight - 1),
+            width: titleLabel.intrinsicContentSize.width,
+            height: underlineHeight
+        )
+
+        // Ensure it appears above other sublayers
+        underlineLayer.zPosition = 10
     }
 
     private func effectiveBackgroundColor() -> UIColor {
@@ -161,6 +259,8 @@ public final class DSButton: UIButton {
             return isEnabled ? DSColor.statusError : DSColor.disabledBackground
         case .ghost:
             return .clear
+        case .link:
+            return .clear
         }
     }
 
@@ -171,6 +271,8 @@ public final class DSButton: UIButton {
         case .secondary:
             return DSColor.textPrimary
         case .ghost:
+            return DSColor.primary
+        case .link:
             return DSColor.primary
         }
     }
@@ -196,7 +298,6 @@ public final class DSButton: UIButton {
     }
 
     // MARK: - Loading state
-
     private func updateLoadingState() {
         if isLoading {
             storedTitle = title(for: .normal)

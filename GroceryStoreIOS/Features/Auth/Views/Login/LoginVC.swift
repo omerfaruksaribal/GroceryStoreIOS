@@ -3,20 +3,17 @@ import UIKit
 final class LoginVC: UIViewController {
 
     //  MARK: - UI
-
     private let titleLabel: DSLabel = {
         let lbl = DSLabel(style: .title1, weight: .bold, textColor: DSColor.primary)
         lbl.text = "Login to Your Account"
         return lbl
     }()
-
     private let usernameField: DSTextField = {
         let tf = DSTextField()
         tf.textField.placeholder = "Username"
         tf.dsState = .normal
         return tf
     }()
-
     private let passwordField: DSTextField = {
         let tf = DSTextField()
         tf.textField.placeholder = "Password"
@@ -25,16 +22,19 @@ final class LoginVC: UIViewController {
         tf.textField.textContentType = .oneTimeCode
         return tf
     }()
-
     private let submitButton: DSButton = {
         let button = DSButton(variant: .primary, size: .large)
         button.setTitle("Login", for: .normal)
         return button
     }()
-
     private let navigateToRegisterButton: DSButton = {
-        let button = DSButton(variant: .secondary, size: .medium)
+        let button = DSButton(variant: .link, size: .small)
         button.setTitle("Don't you have an account? Register", for: .normal)
+        return button
+    }()
+    private let forgotPasswordButton: DSButton = {
+        let button = DSButton(variant: .link, size: .small)
+        button.setTitle("Forgot Password", for: .normal)
         return button
     }()
 
@@ -60,14 +60,14 @@ final class LoginVC: UIViewController {
     }
 
     //  MARK: - Layout
-
     private func layout() {
         let stack = UIStackView(arrangedSubviews: [
             titleLabel,
             usernameField,
             passwordField,
             submitButton,
-            navigateToRegisterButton
+            navigateToRegisterButton,
+            forgotPasswordButton
         ])
         stack.axis = .vertical
         stack.spacing = DSSpacing.lg
@@ -83,7 +83,6 @@ final class LoginVC: UIViewController {
     }
 
     //  MARK: - Bindings
-
     private func bindInputs() {
         usernameField.onEditingChanged = { [weak self] text in
             guard let self else { return }
@@ -97,7 +96,7 @@ final class LoginVC: UIViewController {
         passwordField.onEditingChanged = { [weak self] text in
             guard let self else { return }
             self.viewModel.password = text
-            
+
             if case .error = self.passwordField.dsState {
                 self.passwordField.dsState = .normal
             }
@@ -109,8 +108,8 @@ final class LoginVC: UIViewController {
 
         submitButton.addTarget(self, action: #selector(submitTapped), for: .touchUpInside)
         navigateToRegisterButton.addTarget(self, action: #selector(navigateToRegister), for: .touchUpInside)
+        forgotPasswordButton.addTarget(self, action: #selector(navigateToResetPasswordVC), for: .touchUpInside)
     }
-
     private func bindOutputs() {
         // State Changes (loading / success / error)
         viewModel.onStateChange = { [weak self] state in
@@ -147,19 +146,20 @@ final class LoginVC: UIViewController {
     }
 
     //  MARK: - Actions
-
     @objc private func submitTapped() {
         view.endEditing(true)
         viewModel.submit()
     }
-
     @objc private func navigateToRegister() {
         let vc = RegisterVC()
         navigationController?.pushViewController(vc, animated: true)
     }
+    @objc private func navigateToResetPasswordVC() {
+        let vc = ForgotPasswordVC()
+        navigationController?.pushViewController(vc, animated: true)
+    }
 
     //  MARK: - Helpers
-
     private func setLoading(_ loading: Bool) {
         submitButton.isEnabled = !loading
         submitButton.isLoading = loading

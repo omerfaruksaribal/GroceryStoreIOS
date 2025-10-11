@@ -33,7 +33,9 @@ final class APIClient {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         // Attach custom headers
-        headers.forEach { request.setValue($1, forHTTPHeaderField: $0) }
+        for (key, value) in headers {
+            request.setValue(value, forHTTPHeaderField: key) // " 'Content-Type': 'application/json' - (key: value) "
+        }
 
         // Attach access token if avaliable
         if let token = TokenStore.shared.accessToken {

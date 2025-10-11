@@ -9,6 +9,10 @@ protocol AuthServiceProtocol {
     func activateAccount(_ request: ActivateAccountRequest) async throws -> ApiResponse<EmptyResponse>
 
     func refreshToken(_ request: RefreshTokenRequest) async throws -> RefreshTokenResponse
+
+    func forgotPassword(_ request: ForgotPasswordRequest) async throws -> ForgotPasswordResponse
+
+    func resetPassword(_ request: ResetPasswordRequest) async throws -> ApiResponse<EmptyResponse>
 }
 
 final class AuthService: AuthServiceProtocol {
@@ -63,6 +67,30 @@ final class AuthService: AuthServiceProtocol {
             body: request,
             headers: [:],
             response: RefreshTokenResponse.self
+        )
+        return response
+    }
+
+    /// POST /auth/forgot-password
+    func forgotPassword(_ request: ForgotPasswordRequest) async throws -> ForgotPasswordResponse {
+        let response: ForgotPasswordResponse = try await client.send(
+            path: "/auth/forgot-password",
+            method: "POST",
+            body: request,
+            headers: [:],
+            response: ForgotPasswordResponse.self
+        )
+        return response
+    }
+
+    /// PATCH /auth/reset-password
+    func resetPassword(_ request: ResetPasswordRequest) async throws -> ApiResponse<EmptyResponse> {
+        let response: ApiResponse<EmptyResponse> = try await client.send(
+            path: "/auth/reset-password",
+            method: "PATCH",
+            body: request,
+            headers: [:],
+            response: ApiResponse<EmptyResponse>.self
         )
         return response
     }

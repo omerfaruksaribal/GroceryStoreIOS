@@ -3,27 +3,23 @@ import UIKit
 final class RegisterVC: UIViewController {
 
     //  MARK: - UI
-
     private let titleLabel: DSLabel = {
         let lbl = DSLabel(style: .title1, weight: .bold, textColor: DSColor.primary)
         lbl.text = "Create Your Account"
         return lbl
     }()
-
     private let usernameField: DSTextField = {
         let tf = DSTextField()
         tf.textField.placeholder = "Username"
         tf.dsState = .normal
         return tf
     }()
-
     private let emailField: DSTextField = {
         let tf = DSTextField()
         tf.textField.placeholder = "youremail@sample.com"
         tf.dsState = .normal
         return tf
     }()
-
     private let passwordField: DSTextField = {
         let tf = DSTextField()
         tf.textField.placeholder = "Password"
@@ -32,15 +28,13 @@ final class RegisterVC: UIViewController {
         tf.textField.textContentType = .oneTimeCode
         return tf
     }()
-
     private let submitButton: DSButton = {
         let btn = DSButton(variant: .primary, size: .large)
         btn.setTitle("Create Account", for: .normal)
         return btn
     }()
-
     private let navigateToLoginButton: DSButton = {
-        let btn = DSButton(variant: .secondary, size: .medium)
+        let btn = DSButton(variant: .link, size: .medium)
         btn.setTitle("Already have an account? Login", for: .normal)
         return btn
     }()
@@ -51,7 +45,6 @@ final class RegisterVC: UIViewController {
     private let viewModel = RegisterVM()
 
     //  MARK: - Lifecyle
-
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -68,7 +61,6 @@ final class RegisterVC: UIViewController {
     }
 
     //  MARK: - Layout
-
     private func layout() {
         // Vertical stack to align controls
         let stack = UIStackView(arrangedSubviews: [
@@ -93,7 +85,6 @@ final class RegisterVC: UIViewController {
     }
 
     //  MARK: - Bindings
-
     private func bindInputs() {
         usernameField.onEditingChanged = { [weak self] text in
             guard let self else { return }
@@ -130,7 +121,6 @@ final class RegisterVC: UIViewController {
 
         navigateToLoginButton.addTarget(self, action: #selector(navigateToLogin), for: .touchUpInside)
     }
-
     private func bindOutputs() {
         // State Changes (loading / success / error)
         viewModel.onStateChange = { [weak self] state in
@@ -167,19 +157,16 @@ final class RegisterVC: UIViewController {
     }
 
     //  MARK: - Actions
-
     @objc private func submitTapped() {
         view.endEditing(true)
         viewModel.submit()
     }
-
     @objc private func navigateToLogin() {
         let vc = LoginVC()
         navigationController?.pushViewController(vc, animated: true)
     }
 
     //  MARK: - Helpers
-
     private func setLoading(_ loading: Bool) {
         submitButton.isEnabled = !loading
         submitButton.isLoading = loading
